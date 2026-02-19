@@ -98,6 +98,17 @@ iFinancial/
 |------|----------|
 | ROE (工资年化回报率) | (工资 × 12) / 净资产 |
 
+## 自动构建
+
+项目配置了 GitHub Actions 自动构建，支持打标签自动发布：
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+自动构建 Windows (.exe)。
+
 ## 开发者
 
 XKnowledge Team
