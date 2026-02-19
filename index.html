@@ -251,10 +251,9 @@
                         </div>
                         <div
                             class="flex justify-between items-center py-2 mt-4 bg-green-50 px-3 rounded-lg border border-green-100">
-                            <span class="text-base font-bold text-gray-800">净收入 (支出 - 收入)</span>
+                            <span class="text-base font-bold text-gray-800">净收入</span>
                             <span class="text-lg font-bold text-gray-900" id="res_netIncome">¥0.00</span>
                         </div>
-                        <p class="text-xs text-gray-400 text-center">注：负数表示盈余，正数表示赤字</p>
                     </div>
                 </div>
             </section>
@@ -308,7 +307,7 @@
                             </div>
                             <div class="ml-3">
                                 <p class="text-sm text-blue-700">
-                                    数据自动保存至本地浏览器。切换月份将自动加载对应历史数据。
+                                    数据自动保存至本地 data.json 文件。切换月份将自动加载对应历史数据。
                                 </p>
                             </div>
                         </div>
@@ -328,7 +327,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- Constants & Config ---
-            const STORAGE_KEY = 'personal_finance_data_v1';
             const DEFAULT_MONTH = '2026-02'; // Based on current time in prompt
 
             // Field definitions for easy iteration
@@ -388,23 +386,27 @@
 
             // --- Core Logic ---
 
-            // Load data from localStorage
-            function loadData() {
-                const stored = localStorage.getItem(STORAGE_KEY);
-                if (stored) {
-                    try {
-                        allData = JSON.parse(stored);
-                    } catch (e) {
-                        console.error("Data parse error", e);
-                        allData = {};
+            // Load data from data.json via Electron IPC
+            async function loadData() {
+                try {
+                    const stored = await window.financeAPI.loadData();
+                    if (stored) {
+                        allData = stored;
                     }
+                } catch (e) {
+                    console.error("Data load error", e);
+                    allData = {};
                 }
             }
 
-            // Save data to localStorage
-            function saveData() {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
-                showStatus();
+            // Save data to data.json via Electron IPC
+            async function saveData() {
+                try {
+                    await window.financeAPI.saveData(allData);
+                    showStatus();
+                } catch (e) {
+                    console.error("Data save error", e);
+                }
             }
 
             // Get data for a specific month, returns default 0s if not found
@@ -478,8 +480,8 @@
                 // Total Expenses = Prev Net Assets + Total Income - Current Net Assets
                 const totalExpenses = prevNetAssets + totalIncome - netAssets;
 
-                // Net Income = Total Expenses - Total Income
-                const netIncome = totalExpenses - totalIncome;
+                // Net Income = Total Income - Total Expenses
+                const netIncome = totalIncome - totalExpenses;
 
                 // Other Stats (ROE)
                 // ROE = Salary * 12 / Net Assets
@@ -530,8 +532,8 @@
             });
 
             // --- Initialization ---
-            function init() {
-                loadData();
+            async function init() {
+                await loadData();
                 monthPicker.value = DEFAULT_MONTH;
                 currentMonth = DEFAULT_MONTH;
                 updateInputs();
