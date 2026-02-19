@@ -15,6 +15,7 @@
     "appId": "com.iFinancial.iFinancial",
     "productName": "iFinancial",
     "compression": "store",
+    "publish": "never",
     "directories": {
       "output": "release"
     },
