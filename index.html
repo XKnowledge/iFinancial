@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>个人财务报表软件</title>
+    <!-- Tailwind CSS -->
+    <script src="https://image.uc.cn/s/uae/g/3n/mos-production/0915/3.4.17.js"></script>
+    <!-- Font Awesome -->
+    <script src="https://image.uc.cn/s/uae/g/3n/mos-production/fontawesome-free-7.1.0-web/js/all.min.js"></script>
+    <link href="https://image.uc.cn/s/uae/g/3n/mos-production/fontawesome-free-7.1.0-web/css/fontawesome.min.css"
+        rel="stylesheet" />
+    <style>
+        /* Custom styles for finer control */
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .input-group {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .input-group:focus-within {
+            transform: translateY(-1px);
+        }
+
+        /* Read-only result styling */
+        .result-display {
+            background-color: #f9fafb;
+            border: 1px dashed #d1d5db;
+        }
+
+        /* Status indicator animation */
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .status-msg {
+            animation: fadeInOut 2s forwards;
+        }
+    </style>
+</head>
+
+<body class="text-gray-800 min-h-screen flex flex-col">
+    <!-- Header Section -->
+    <header class="bg-white shadow-md sticky top-0 z-10">
+        <div
+            class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-chart-line text-blue-600 text-2xl"></i>
+                <h1 class="text-xl font-bold text-gray-900">个人财务报表</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Month Selector -->
+                <div class="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
+                    <label class="text-sm font-medium text-gray-600" for="monthPicker"><i
+                            class="fa-regular fa-calendar mr-1"></i>月份</label>
+                    <input class="bg-transparent border-none outline-none text-gray-900 font-semibold cursor-pointer"
+                        id="monthPicker" type="month" />
+                </div>
+                <!-- Reset Button -->
+                <button
+                    class="text-sm px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2 border border-red-200"
+                    id="resetBtn">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    重置本月
+                </button>
+                <!-- Status Indicator -->
+                <div class="hidden text-sm font-medium text-green-600 flex items-center gap-1" id="statusIndicator">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <span>已保存</span>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <!-- Cards Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Module 1: Balance Sheet (资产负债表) -->
+            <section class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col">
+                <div class="bg-blue-50 px-6 py-4 border-b border-blue-100 flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-blue-800"><i class="fa-solid fa-scale-balanced mr-2"></i>资产负债表
+                    </h2>
+                    <span class="text-xs font-semibold text-blue-500 uppercase tracking-wide">Assets &amp;
+                        Liabilities</span>
+                </div>
+                <div class="p-6 space-y-6 flex-grow">
+                    <!-- Assets -->
+                    <div class="space-y-3">
+                        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider border-b pb-1">资产 (输入)
+                        </h3>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">现金</label>
+                            <div class="relative rounded-md shadow-sm">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <span class="text-gray-500 sm:text-sm">¥</span>
+                                </div>
+                                <input
+                                    class="block w-full rounded-md border-gray-300 pl-7 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm border"
+                                    data-field="cash" placeholder="0.00" type="number" />
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">银行存款</label>
+                            <div class="relative rounded-md shadow-sm">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <span class="text-gray-500 sm:text-sm">¥</span>
+                                </div>
+                                <input
+                                    class="block w-full rounded-md border-gray-300 pl-7 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm border"
+                                    data-field="bankDeposit" placeholder="0.00" type="number" />
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">股权投资</label>
+                            <div class="relative rounded-md shadow-sm">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <span class="text-gray-500 sm:text-sm">¥</span>
+                                </div>
+                                <input
+                                    class="block w-full rounded-md border-gray-300 pl-7 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm border"
+                                    data-field="equityInvestment" placeholder="0.00" type="number" />
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">房地产</label>
+                            <div class="relative rounded-md shadow-sm">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <span class="text-gray-500 sm:text-sm">¥</span>
+                                </div>
+                                <input
+                                    class="block w-full rounded-md border-gray-300 pl-7 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm border"
+                                    data-field="realEstate" placeholder="0.00" type="number" />
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Liabilities -->
+                    <div class="space-y-3">
+                        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider border-b pb-1">负债 (输入)
+                        </h3>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">信用卡/短期贷款</label>
+                            <div class="relative rounded-md shadow-sm">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <span class="text-gray-500 sm:text-sm">¥</span>
+                                </div>
+                                <input
+                                    class="block w-full rounded-md border-gray-300 pl-7 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm border"
+                                    data-field="shortTermLoan" placeholder="0.00" type="number" />
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">银行贷款</label>
+                            <div class="relative rounded-md shadow-sm">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <span class="text-gray-500 sm:text-sm">¥</span>
+                                </div>
+                                <input
+                                    class="block w-full rounded-md border-gray-300 pl-7 py-2 focus:border-blue-500 focus:ring-blue-500 sm:text-sm border"
+                                    data-field="bankLoan" placeholder="0.00" type="number" />
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Calculated Results -->
+                    <div class="space-y-3 pt-4 bg-gray-50 -mx-6 px-6 pb-4">
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-sm font-medium text-gray-600">总资产</span>
+                            <span class="text-sm font-bold text-gray-900" id="res_totalAssets">¥0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-sm font-medium text-gray-600">总负债</span>
+                            <span class="text-sm font-bold text-gray-900" id="res_totalLiabilities">¥0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-t border-gray-200 mt-2">
+                            <span class="text-base font-bold text-gray-800">净资产</span>
+                            <span class="text-lg font-bold text-blue-600" id="res_netAssets">¥0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Module 2: Income Statement (损益表) -->
+            <section class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col">
+                <div class="bg-green-50 px-6 py-4 border-b border-green-100 flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-green-800"><i class="fa-solid fa-file-invoice-dollar mr-2"></i>损益表
+                    </h2>
+                    <span class="text-xs font-semibold text-green-500 uppercase tracking-wide">Income Statement</span>
+                </div>
+                <div class="p-6 space-y-6 flex-grow">
+                    <!-- Inputs -->
+                    <div class="space-y-3">
+                        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider border-b pb-1">收入 (输入)
+                        </h3>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">工资</label>
+                            <div class="relative rounded-md shadow-sm">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <span class="text-gray-500 sm:text-sm">¥</span>
+                                </div>
+                                <input
+                                    class="block w-full rounded-md border-gray-300 pl-7 py-2 focus:border-green-500 focus:ring-green-500 sm:text-sm border"
+                                    data-field="salary" placeholder="0.00" type="number" />
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">其他收入</label>
+                            <div class="relative rounded-md shadow-sm">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <span class="text-gray-500 sm:text-sm">¥</span>
+                                </div>
+                                <input
+                                    class="block w-full rounded-md border-gray-300 pl-7 py-2 focus:border-green-500 focus:ring-green-500 sm:text-sm border"
+                                    data-field="otherIncome" placeholder="0.00" type="number" />
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Calculated Results -->
+                    <div class="space-y-4 pt-2">
+                        <div class="result-display p-3 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-500">投资收入 (当月股权 - 上月股权 - 新增投资)</span>
+                                <span class="text-sm font-semibold text-gray-800" id="res_investmentIncome">¥0.00</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center py-1 border-b border-gray-100">
+                            <span class="text-sm font-medium text-gray-700">总收入</span>
+                            <span class="text-base font-bold text-green-600" id="res_totalIncome">¥0.00</span>
+                        </div>
+                        <div class="result-display p-3 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-500">总支出 (上月净资产 + 总收入 - 当月净资产)</span>
+                                <span class="text-sm font-semibold text-gray-800" id="res_totalExpenses">¥0.00</span>
+                            </div>
+                        </div>
+                        <div
+                            class="flex justify-between items-center py-2 mt-4 bg-green-50 px-3 rounded-lg border border-green-100">
+                            <span class="text-base font-bold text-gray-800">净收入 (支出 - 收入)</span>
+                            <span class="text-lg font-bold text-gray-900" id="res_netIncome">¥0.00</span>
+                        </div>
+                        <p class="text-xs text-gray-400 text-center">注：负数表示盈余，正数表示赤字</p>
+                    </div>
+                </div>
+            </section>
+            <!-- Module 3: Other Stats (其他统计) -->
+            <section class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col">
+                <div class="bg-purple-50 px-6 py-4 border-b border-purple-100 flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-purple-800"><i class="fa-solid fa-calculator mr-2"></i>其他统计</h2>
+                    <span class="text-xs font-semibold text-purple-500 uppercase tracking-wide">Statistics</span>
+                </div>
+                <div class="p-6 space-y-6 flex-grow">
+                    <!-- Input -->
+                    <div class="space-y-3">
+                        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider border-b pb-1">投资活动</h3>
+                        <div class="input-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">新增投资</label>
+                            <div class="relative rounded-md shadow-sm">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <span class="text-gray-500 sm:text-sm">¥</span>
+                                </div>
+                                <input
+                                    class="block w-full rounded-md border-gray-300 pl-7 py-2 focus:border-purple-500 focus:ring-purple-500 sm:text-sm border"
+                                    data-field="newInvestment" placeholder="0.00" type="number" />
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Calculated Results -->
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <h4 class="text-sm font-medium text-gray-500 mb-2">投资收入详情</h4>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">计算结果</span>
+                                <span class="text-lg font-bold text-purple-600"
+                                    id="res_statInvestmentIncome">¥0.00</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">公式: 当月股权 - 上月股权 - 新增投资</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <h4 class="text-sm font-medium text-gray-500 mb-2">ROE (Return on Equity)</h4>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">工资年化回报率</span>
+                                <span class="text-lg font-bold text-purple-600" id="res_roe">NA</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">公式: (工资 × 12) / 净资产</p>
+                        </div>
+                    </div>
+                    <!-- Info Box -->
+                    <div class="mt-auto bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fa-solid fa-circle-info text-blue-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-blue-700">
+                                    数据自动保存至本地浏览器。切换月份将自动加载对应历史数据。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-sm text-gray-500">
+                © 2026 个人财务报表软件. All rights reserved.
+            </p>
+        </div>
+    </footer>
+    <!-- Application Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Constants & Config ---
+            const STORAGE_KEY = 'personal_finance_data_v1';
+            const DEFAULT_MONTH = '2026-02'; // Based on current time in prompt
+
+            // Field definitions for easy iteration
+            const INPUT_FIELDS = [
+                'cash', 'bankDeposit', 'equityInvestment', 'realEstate',
+                'shortTermLoan', 'bankLoan', 'salary', 'otherIncome', 'newInvestment'
+            ];
+
+            // --- DOM Elements ---
+            const monthPicker = document.getElementById('monthPicker');
+            const resetBtn = document.getElementById('resetBtn');
+            const statusIndicator = document.getElementById('statusIndicator');
+            const inputs = document.querySelectorAll('input[data-field]');
+
+            // --- State Management ---
+            let currentMonth = DEFAULT_MONTH;
+            let allData = {}; // Structure: { "2026-01": { cash: 100, ... }, "2026-02": { ... } }
+
+            // --- Helper Functions ---
+
+            // Get previous month string (YYYY-MM)
+            function getPrevMonthStr(monthStr) {
+                const [year, month] = monthStr.split('-').map(Number);
+                const date = new Date(year, month - 1, 1); // month is 0-indexed in Date
+                date.setMonth(date.getMonth() - 1);
+                const prevYear = date.getFullYear();
+                const prevMonth = String(date.getMonth() + 1).padStart(2, '0');
+                return `${prevYear}-${prevMonth}`;
+            }
+
+            // Format currency
+            const currencyFormatter = new Intl.NumberFormat('zh-CN', {
+                style: 'currency',
+                currency: 'CNY',
+                minimumFractionDigits: 2
+            });
+
+            // Safe number parser
+            function parseNum(val) {
+                const num = parseFloat(val);
+                return isNaN(num) ? 0 : num;
+            }
+
+            // Show save status
+            let statusTimeout;
+            function showStatus() {
+                statusIndicator.classList.remove('hidden');
+                statusIndicator.classList.remove('status-msg');
+                void statusIndicator.offsetWidth; // trigger reflow
+                statusIndicator.classList.add('status-msg');
+
+                clearTimeout(statusTimeout);
+                statusTimeout = setTimeout(() => {
+                    statusIndicator.classList.add('hidden');
+                }, 2000);
+            }
+
+            // --- Core Logic ---
+
+            // Load data from localStorage
+            function loadData() {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    try {
+                        allData = JSON.parse(stored);
+                    } catch (e) {
+                        console.error("Data parse error", e);
+                        allData = {};
+                    }
+                }
+            }
+
+            // Save data to localStorage
+            function saveData() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
+                showStatus();
+            }
+
+            // Get data for a specific month, returns default 0s if not found
+            function getMonthData(monthStr) {
+                if (!allData[monthStr]) {
+                    // Return default object structure
+                    return INPUT_FIELDS.reduce((acc, field) => ({ ...acc, [field]: 0 }), {});
+                }
+                return allData[monthStr];
+            }
+
+            // Update UI inputs based on state
+            function updateInputs() {
+                const data = getMonthData(currentMonth);
+                inputs.forEach(input => {
+                    const field = input.dataset.field;
+                    input.value = data[field] || '';
+                });
+            }
+
+            // Main Calculation Function
+            function calculate() {
+                // 1. Get Current Month Data
+                const currentData = getMonthData(currentMonth);
+
+                // Parse inputs (in case user is typing and state hasn't synced yet, read from DOM for current inputs)
+                // However, to keep state single source of truth, we usually update state on input.
+                // Let's rely on currentData state, but ensure inputs are synced.
+                // Actually, let's read from DOM for the "Current" active values to be most responsive.
+                const cash = parseNum(document.querySelector('[data-field="cash"]').value);
+                const bankDeposit = parseNum(document.querySelector('[data-field="bankDeposit"]').value);
+                const equityInvestment = parseNum(document.querySelector('[data-field="equityInvestment"]').value);
+                const realEstate = parseNum(document.querySelector('[data-field="realEstate"]').value);
+                const shortTermLoan = parseNum(document.querySelector('[data-field="shortTermLoan"]').value);
+                const bankLoan = parseNum(document.querySelector('[data-field="bankLoan"]').value);
+                const salary = parseNum(document.querySelector('[data-field="salary"]').value);
+                const otherIncome = parseNum(document.querySelector('[data-field="otherIncome"]').value);
+                const newInvestment = parseNum(document.querySelector('[data-field="newInvestment"]').value);
+
+                // Update current state object in memory (before saving)
+                const updatedCurrentData = {
+                    cash, bankDeposit, equityInvestment, realEstate,
+                    shortTermLoan, bankLoan, salary, otherIncome, newInvestment
+                };
+                allData[currentMonth] = updatedCurrentData;
+
+                // 2. Get Previous Month Data
+                const prevMonthStr = getPrevMonthStr(currentMonth);
+                const prevData = getMonthData(prevMonthStr);
+                const prevEquity = parseNum(prevData.equityInvestment);
+
+                // Need Prev Net Assets for Total Expenses calculation
+                const prevTotalAssets = parseNum(prevData.cash) + parseNum(prevData.bankDeposit) + parseNum(prevData.equityInvestment) + parseNum(prevData.realEstate);
+                const prevTotalLiabilities = parseNum(prevData.shortTermLoan) + parseNum(prevData.bankLoan);
+                const prevNetAssets = prevTotalAssets - prevTotalLiabilities;
+
+                // 3. Perform Calculations
+
+                // Balance Sheet
+                const totalAssets = cash + bankDeposit + equityInvestment + realEstate;
+                const totalLiabilities = shortTermLoan + bankLoan;
+                const netAssets = totalAssets - totalLiabilities;
+
+                // Investment Income (Used in both modules)
+                // Formula: Current Equity - Prev Equity - New Investment
+                const investmentIncome = equityInvestment - prevEquity - newInvestment;
+
+                // Income Statement
+                const totalIncome = salary + otherIncome + investmentIncome;
+
+                // Total Expenses = Prev Net Assets + Total Income - Current Net Assets
+                const totalExpenses = prevNetAssets + totalIncome - netAssets;
+
+                // Net Income = Total Expenses - Total Income
+                const netIncome = totalExpenses - totalIncome;
+
+                // Other Stats (ROE)
+                // ROE = Salary * 12 / Net Assets
+                let roe = "NA";
+                if (netAssets !== 0) {
+                    roe = ((salary * 12) / netAssets).toFixed(2) + '%';
+                }
+
+                // 4. Update DOM Results
+                document.getElementById('res_totalAssets').textContent = currencyFormatter.format(totalAssets);
+                document.getElementById('res_totalLiabilities').textContent = currencyFormatter.format(totalLiabilities);
+                document.getElementById('res_netAssets').textContent = currencyFormatter.format(netAssets);
+
+                document.getElementById('res_investmentIncome').textContent = currencyFormatter.format(investmentIncome);
+                document.getElementById('res_totalIncome').textContent = currencyFormatter.format(totalIncome);
+                document.getElementById('res_totalExpenses').textContent = currencyFormatter.format(totalExpenses);
+                document.getElementById('res_netIncome').textContent = currencyFormatter.format(netIncome);
+
+                document.getElementById('res_statInvestmentIncome').textContent = currencyFormatter.format(investmentIncome);
+                document.getElementById('res_roe').textContent = roe;
+
+                // Save data automatically
+                saveData();
+            }
+
+            // --- Event Listeners ---
+
+            // Input changes
+            inputs.forEach(input => {
+                input.addEventListener('input', calculate);
+            });
+
+            // Month change
+            monthPicker.addEventListener('change', (e) => {
+                currentMonth = e.target.value;
+                updateInputs();
+                calculate();
+            });
+
+            // Reset button
+            resetBtn.addEventListener('click', () => {
+                if (confirm('确定要清空当前月份的所有数据吗？此操作无法撤销。')) {
+                    // Reset inputs in DOM
+                    inputs.forEach(input => input.value = '');
+                    // Trigger calculation which will save the zeros
+                    calculate();
+                }
+            });
+
+            // --- Initialization ---
+            function init() {
+                loadData();
+                monthPicker.value = DEFAULT_MONTH;
+                currentMonth = DEFAULT_MONTH;
+                updateInputs();
+                calculate();
+            }
+
+            init();
+        });
+    </script>
+</body>
+
+</html>

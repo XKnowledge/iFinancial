@@ -1,0 +1,33 @@
+{
+  "name": "iFinancial",
+  "version": "1.0.0",
+  "description": "个人财务报表制作软件",
+  "main": "main.js",
+  "author": "XKnowledge Team",
+  "scripts": {
+    "start": "electron .",
+    "postinstall": "electron-builder install-app-deps",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.iFinancial.iFinancial",
+    "productName": "iFinancial",
+    "compression": "store",
+    "directories": {
+      "output": "release"
+    },
+    "asar": true,
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "!**/node_modules/**/*"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^28.2.0",
+    "electron-builder": "^24.9.1"
+  }
+}
