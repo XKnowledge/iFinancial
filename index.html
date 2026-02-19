@@ -103,6 +103,11 @@
                         <i class="fa-solid fa-floppy-disk"></i> 保存数据
                     </button>
                     <button
+                        class="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md shadow transition-colors flex items-center justify-center gap-2"
+                        id="btn-delete">
+                        <i class="fa-solid fa-trash"></i> 删除月份
+                    </button>
+                    <button
                         class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md shadow transition-colors flex items-center justify-center gap-2"
                         id="btn-view-history">
                         <i class="fa-solid fa-chart-pie"></i> 查看历史
@@ -324,6 +329,7 @@
             pageCharts: document.getElementById('page-charts'),
             monthSelector: document.getElementById('month-selector'),
             btnSave: document.getElementById('btn-save'),
+            btnDelete: document.getElementById('btn-delete'),
             btnViewHistory: document.getElementById('btn-view-history'),
             btnBack: document.getElementById('btn-back'),
 
@@ -372,6 +378,7 @@
             // Bind Events
             els.monthSelector.addEventListener('change', handleMonthChange);
             els.btnSave.addEventListener('click', saveData);
+            els.btnDelete.addEventListener('click', deleteMonthData);
             els.btnViewHistory.addEventListener('click', showChartsPage);
             els.btnBack.addEventListener('click', showInputPage);
 
@@ -634,6 +641,58 @@
             }
         }
 
+        // Delete Month Data
+        async function deleteMonthData() {
+            const currentMonth = els.monthSelector.value;
+            if (!currentMonth) {
+                showToast('请选择有效的月份', 'error');
+                return;
+            }
+
+            // Check if data exists for this month
+            if (!allDataCache[currentMonth]) {
+                showToast(`${currentMonth} 没有数据`, 'warning');
+                return;
+            }
+
+            // Confirm deletion
+            if (!confirm(`确定要删除 ${currentMonth} 的数据吗？此操作不可恢复。`)) {
+                return;
+            }
+
+            // Delete the month data from cache
+            delete allDataCache[currentMonth];
+
+            // Save to JSON file
+            try {
+                if (window.financeAPI && window.financeAPI.saveData) {
+                    const result = await window.financeAPI.saveData(allDataCache);
+                    if (result.success) {
+                        showToast(`${currentMonth} 数据已删除`, 'success');
+                        // Clear input fields
+                        els.inputs.assets.forEach(el => el.value = '');
+                        els.inputs.liabilities.forEach(el => el.value = '');
+                        els.inputs.incomes.forEach(el => el.value = '');
+                        els.inputs.newInvestment.value = '';
+                        calculate();
+                    } else {
+                        showToast(`删除失败: ${result.error}`, 'error');
+                    }
+                } else {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(allDataCache));
+                    showToast(`${currentMonth} 数据已删除`, 'success');
+                    els.inputs.assets.forEach(el => el.value = '');
+                    els.inputs.liabilities.forEach(el => el.value = '');
+                    els.inputs.incomes.forEach(el => el.value = '');
+                    els.inputs.newInvestment.value = '';
+                    calculate();
+                }
+            } catch (error) {
+                console.error('删除数据失败:', error);
+                showToast(`删除失败: ${error.message}`, 'error');
+            }
+        }
+
         // --- Navigation & Charts ---
 
         function showInputPage() {
@@ -655,9 +714,17 @@
                 return;
             }
 
-            const months = Object.keys(allDataCache).sort();
+            const allMonths = Object.keys(allDataCache).sort();
 
-            if (months.length === 0) return;
+            if (allMonths.length === 0) return;
+
+            // 跳过第一个月（初始月），从第二个月开始绘制
+            const months = allMonths.slice(1);
+
+            if (months.length === 0) {
+                showToast('只有初始月数据，暂无可绘制的历史数据', 'warning');
+                return;
+            }
 
             // Prepare Data Arrays
             const netIncomeData = [];
