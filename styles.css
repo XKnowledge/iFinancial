@@ -1,0 +1,94 @@
+/* Custom Styles */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f3f4f6;
+}
+
+/* 自定义标题栏样式 */
+.title-bar {
+    -webkit-app-region: drag;
+    user-select: none;
+}
+
+.title-bar-buttons {
+    -webkit-app-region: no-drag;
+}
+
+.window-btn {
+    width: 46px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.window-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.window-btn.close:hover {
+    background-color: #e81123;
+    color: white;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+* {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Smooth transitions */
+.transition-all-300 {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Input styling overrides */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Toast Notification Animation */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.toast {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+.toast.hiding {
+    animation: fadeOut 0.3s ease-in forwards;
+}
