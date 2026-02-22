@@ -1,13 +1,56 @@
-/* Custom Styles */
-body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #f3f4f6;
+/* Custom Styles - Dark Gold Theme */
+:root {
+    --gold-primary: #d4af37;
+    --gold-light: #f0d77c;
+    --gold-dark: #b8860b;
+    --gold-accent: #c9a227;
+    --bg-dark: #0f0f0f;
+    --bg-card: #1a1a1a;
+    --bg-card-header: #252525;
+    --bg-input: #2a2a2a;
+    --text-primary: #f5f5f5;
+    --text-secondary: #a0a0a0;
+    --text-muted: #707070;
+    --border-color: #3a3a3a;
+    --border-gold: rgba(212, 175, 55, 0.3);
 }
 
-/* 自定义标题栏样式 */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(135deg, #3d3020 0%, #4a4035 20%, #504a42 40%, #55504a 55%, #5a5852 70%, #605e58 85%, #686662 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    position: relative;
+}
+
+/* 金银光晕效果 */
+body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 20% 30%, rgba(212, 175, 55, 0.18) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(192, 192, 210, 0.15) 0%, transparent 45%),
+                radial-gradient(ellipse at 50% 50%, rgba(180, 180, 200, 0.08) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+body > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* 自定义标题栏样式 - Glass Effect */
 .title-bar {
     -webkit-app-region: drag;
     user-select: none;
+    background: linear-gradient(135deg, rgba(55, 48, 40, 0.6) 0%, rgba(45, 40, 35, 0.7) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
 }
 
 .title-bar-buttons {
@@ -27,12 +70,214 @@ body {
 }
 
 .window-btn:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(212, 175, 55, 0.2);
 }
 
 .window-btn.close:hover {
-    background-color: #e81123;
+    background-color: #c41e3a;
     color: white;
+}
+
+/* Card Styles - Glass Effect */
+.bg-card-dark {
+    background: linear-gradient(135deg, rgba(60, 52, 42, 0.6) 0%, rgba(50, 45, 38, 0.7) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                0 2px 8px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(212, 175, 55, 0.15);
+}
+
+.bg-card-header {
+    background: linear-gradient(135deg, rgba(70, 60, 48, 0.55) 0%, rgba(55, 48, 40, 0.65) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+/* Input Styles - Glass Effect */
+input[type="number"],
+input[type="month"] {
+    background: linear-gradient(135deg, rgba(80, 72, 62, 0.5) 0%, rgba(65, 58, 50, 0.6) 100%) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(212, 175, 55, 0.2) !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+input[type="number"]:focus,
+input[type="month"]:focus {
+    border-color: var(--gold-primary) !important;
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.25),
+                0 4px 16px rgba(212, 175, 55, 0.2) !important;
+    background: linear-gradient(135deg, rgba(90, 82, 70, 0.55) 0%, rgba(75, 68, 58, 0.65) 100%) !important;
+}
+
+input[type="number"]::placeholder {
+    color: var(--text-muted);
+}
+
+/* Gold Button - Glass Effect */
+.btn-gold {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.9) 0%, rgba(184, 134, 11, 0.95) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #0f0f0f !important;
+    border: 1px solid rgba(255, 215, 100, 0.3);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3),
+                0 2px 8px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.btn-gold:hover {
+    background: linear-gradient(135deg, rgba(240, 215, 124, 0.95) 0%, rgba(212, 175, 55, 1) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(212, 175, 55, 0.4),
+                0 4px 12px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Gold Text */
+.text-gold {
+    color: var(--gold-primary) !important;
+}
+
+.text-gold-light {
+    color: var(--gold-light) !important;
+}
+
+/* Link gold colors for Tailwind compatibility */
+.text-amber-100 {
+    color: #fef3c7;
+}
+
+.text-amber-200 {
+    color: #fde68a;
+}
+
+.text-amber-200\/50 {
+    color: rgba(253, 230, 138, 0.5);
+}
+
+.text-amber-200\/70 {
+    color: rgba(253, 230, 138, 0.7);
+}
+
+.text-amber-200\/80 {
+    color: rgba(253, 230, 138, 0.8);
+}
+
+/* Gold Backgrounds - Glass Effect */
+.bg-gold-soft {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(184, 134, 11, 0.05) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    box-shadow: 0 4px 16px rgba(212, 175, 55, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.bg-gold-highlight {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(184, 134, 11, 0.07) 50%, rgba(140, 100, 20, 0.05) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.12),
+                0 2px 8px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Section Headers */
+.section-header {
+    color: var(--gold-light);
+    letter-spacing: 0.05em;
+}
+
+/* Divider */
+.divider-gold {
+    border-top: 1px solid var(--border-color);
+}
+
+/* Glass Button Base */
+.glass-btn {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.glass-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Rose Button Glass */
+.bg-rose-700 {
+    background: linear-gradient(135deg, rgba(190, 50, 70, 0.85) 0%, rgba(150, 40, 60, 0.9) 100%) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 100, 120, 0.2) !important;
+}
+
+.bg-rose-700:hover {
+    background: linear-gradient(135deg, rgba(210, 60, 80, 0.9) 0%, rgba(170, 50, 70, 0.95) 100%) !important;
+}
+
+/* Amber Button Glass */
+.bg-amber-700 {
+    background: linear-gradient(135deg, rgba(180, 130, 50, 0.85) 0%, rgba(150, 100, 30, 0.9) 100%) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 200, 100, 0.2) !important;
+}
+
+.bg-amber-700:hover {
+    background: linear-gradient(135deg, rgba(200, 150, 70, 0.9) 0%, rgba(170, 120, 50, 0.95) 100%) !important;
+}
+
+.bg-amber-800 {
+    background: linear-gradient(135deg, rgba(150, 100, 40, 0.85) 0%, rgba(120, 80, 30, 0.9) 100%) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 200, 100, 0.15) !important;
+}
+
+.bg-amber-800:hover {
+    background: linear-gradient(135deg, rgba(170, 120, 60, 0.9) 0%, rgba(140, 100, 50, 0.95) 100%) !important;
+}
+
+/* Stats Box Glass */
+.bg-amber-900\/20 {
+    background: linear-gradient(135deg, rgba(80, 65, 45, 0.4) 0%, rgba(65, 52, 38, 0.5) 100%) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.bg-rose-900\/30 {
+    background: linear-gradient(135deg, rgba(100, 55, 65, 0.35) 0%, rgba(80, 45, 55, 0.45) 100%) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.bg-emerald-900\/30 {
+    background: linear-gradient(135deg, rgba(50, 90, 80, 0.35) 0%, rgba(40, 75, 65, 0.45) 100%) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+/* Footer Glass */
+footer {
+    background: linear-gradient(135deg, rgba(55, 48, 40, 0.55) 0%, rgba(45, 40, 35, 0.65) 100%) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -87,8 +332,130 @@ input[type="number"] {
 
 .toast {
     animation: slideIn 0.3s ease-out forwards;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .toast.hiding {
     animation: fadeOut 0.3s ease-in forwards;
+}
+
+/* Confirm Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal-overlay.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: linear-gradient(135deg, rgba(60, 52, 42, 0.85) 0%, rgba(45, 40, 35, 0.9) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 16px;
+    padding: 28px 32px;
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4),
+                0 8px 24px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(212, 175, 55, 0.2);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, rgba(190, 50, 70, 0.2) 0%, rgba(150, 40, 60, 0.3) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 100, 120, 0.3);
+}
+
+.modal-icon i {
+    font-size: 24px;
+    color: #f87171;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fef3c7;
+    margin-bottom: 8px;
+}
+
+.modal-message {
+    font-size: 14px;
+    color: rgba(253, 230, 138, 0.7);
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.modal-btn {
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.modal-btn-cancel {
+    background: linear-gradient(135deg, rgba(80, 72, 62, 0.6) 0%, rgba(65, 58, 50, 0.7) 100%);
+    color: #fef3c7;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.modal-btn-cancel:hover {
+    background: linear-gradient(135deg, rgba(90, 82, 72, 0.7) 0%, rgba(75, 68, 60, 0.8) 100%);
+    transform: translateY(-1px);
+}
+
+.modal-btn-confirm {
+    background: linear-gradient(135deg, rgba(190, 50, 70, 0.9) 0%, rgba(150, 40, 60, 0.95) 100%);
+    color: white;
+    border: 1px solid rgba(255, 100, 120, 0.3);
+}
+
+.modal-btn-confirm:hover {
+    background: linear-gradient(135deg, rgba(210, 60, 80, 0.95) 0%, rgba(170, 50, 70, 1) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(190, 50, 70, 0.4);
 }

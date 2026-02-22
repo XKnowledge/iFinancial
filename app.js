@@ -78,9 +78,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isMax = await window.financeAPI.isMaximized();
             const icon = document.querySelector('#btn-maximize i');
             if (isMax) {
-                icon.className = 'fa-solid fa-down-left-and-up-right-to-center text-gray-600 text-sm';
+                icon.className = 'fa-solid fa-down-left-and-up-right-to-center text-amber-200/60 text-sm';
             } else {
-                icon.className = 'fa-regular fa-square text-gray-600 text-sm';
+                icon.className = 'fa-regular fa-square text-amber-200/60 text-sm';
             }
         }
     });
@@ -364,8 +364,9 @@ async function deleteMonthData() {
         return;
     }
 
-    // Confirm deletion
-    if (!confirm(`确定要删除 ${currentMonth} 的数据吗？此操作不可恢复。`)) {
+    // Show custom confirm modal
+    const confirmed = await showConfirmModal(`确定要删除 ${currentMonth} 的数据吗？此操作不可恢复。`);
+    if (!confirmed) {
         return;
     }
 
@@ -463,12 +464,18 @@ function renderCharts() {
     chartInstances.line = echarts.init(els.chartLine);
 
     const optionLine = {
+        backgroundColor: 'transparent',
+        textStyle: { color: '#a0a0a0' },
         tooltip: {
             trigger: 'axis',
-            axisPointer: { type: 'cross' }
+            axisPointer: { type: 'cross' },
+            backgroundColor: '#252525',
+            borderColor: '#d4af37',
+            textStyle: { color: '#f5f5f5' }
         },
         legend: {
-            data: ['净收入', '总支出', '净资产增幅']
+            data: ['净收入', '总支出', '净资产增幅'],
+            textStyle: { color: '#a0a0a0' }
         },
         grid: {
             left: '3%',
@@ -479,12 +486,17 @@ function renderCharts() {
         xAxis: {
             type: 'category',
             boundaryGap: false,
-            data: months
+            data: months,
+            axisLine: { lineStyle: { color: '#3a3a3a' } },
+            axisLabel: { color: '#a0a0a0' }
         },
         yAxis: {
             type: 'value',
             name: '金额 (元)',
-            axisLabel: { formatter: '{value}' }
+            nameTextStyle: { color: '#a0a0a0' },
+            axisLabel: { formatter: '{value}', color: '#a0a0a0' },
+            splitLine: { lineStyle: { color: '#3a3a3a' } },
+            axisLine: { lineStyle: { color: '#3a3a3a' } }
         },
         series: [
             {
@@ -492,21 +504,21 @@ function renderCharts() {
                 type: 'line',
                 data: netIncomeData,
                 smooth: true,
-                itemStyle: { color: '#10b981' } // emerald-500
+                itemStyle: { color: '#34d399' } // emerald-400
             },
             {
                 name: '总支出',
                 type: 'line',
                 data: totalExpensesData,
                 smooth: true,
-                itemStyle: { color: '#ef4444' } // red-500
+                itemStyle: { color: '#f87171' } // red-400
             },
             {
                 name: '净资产增幅',
                 type: 'line',
                 data: netWorthGrowthData,
                 smooth: true,
-                itemStyle: { color: '#3b82f6' } // blue-500
+                itemStyle: { color: '#d4af37' } // gold
             }
         ]
     };
@@ -517,9 +529,14 @@ function renderCharts() {
     chartInstances.bar = echarts.init(els.chartBar);
 
     const optionBar = {
+        backgroundColor: 'transparent',
+        textStyle: { color: '#a0a0a0' },
         tooltip: {
             trigger: 'axis',
-            axisPointer: { type: 'cross' }
+            axisPointer: { type: 'cross' },
+            backgroundColor: '#252525',
+            borderColor: '#d4af37',
+            textStyle: { color: '#f5f5f5' }
         },
         grid: {
             left: '3%',
@@ -530,11 +547,17 @@ function renderCharts() {
         xAxis: {
             type: 'category',
             boundaryGap: false,
-            data: months
+            data: months,
+            axisLine: { lineStyle: { color: '#3a3a3a' } },
+            axisLabel: { color: '#a0a0a0' }
         },
         yAxis: {
             type: 'value',
-            name: '净资产 (元)'
+            name: '净资产 (元)',
+            nameTextStyle: { color: '#a0a0a0' },
+            axisLabel: { color: '#a0a0a0' },
+            splitLine: { lineStyle: { color: '#3a3a3a' } },
+            axisLine: { lineStyle: { color: '#3a3a3a' } }
         },
         series: [
             {
@@ -542,11 +565,11 @@ function renderCharts() {
                 type: 'line',
                 data: netWorthData,
                 smooth: true,
-                itemStyle: { color: '#8b5cf6' },
+                itemStyle: { color: '#d4af37' },
                 areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: 'rgba(139, 92, 246, 0.3)' },
-                        { offset: 1, color: 'rgba(139, 92, 246, 0.05)' }
+                        { offset: 0, color: 'rgba(212, 175, 55, 0.4)' },
+                        { offset: 1, color: 'rgba(212, 175, 55, 0.05)' }
                     ])
                 }
             }
@@ -563,23 +586,55 @@ function renderCharts() {
 
 // --- Utilities ---
 
+// Custom Confirm Modal
+function showConfirmModal(message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-modal');
+        const modalMessage = document.getElementById('modal-message');
+        const btnConfirm = document.getElementById('modal-confirm');
+        const btnCancel = document.getElementById('modal-cancel');
+
+        modalMessage.textContent = message;
+        modal.classList.remove('hidden');
+
+        const cleanup = () => {
+            modal.classList.add('hidden');
+            btnConfirm.removeEventListener('click', handleConfirm);
+            btnCancel.removeEventListener('click', handleCancel);
+        };
+
+        const handleConfirm = () => {
+            cleanup();
+            resolve(true);
+        };
+
+        const handleCancel = () => {
+            cleanup();
+            resolve(false);
+        };
+
+        btnConfirm.addEventListener('click', handleConfirm);
+        btnCancel.addEventListener('click', handleCancel);
+    });
+}
+
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
 
-    // Colors based on type
-    let bgClass = 'bg-green-600';
+    // Colors based on type - Dark Gold theme
+    let bgClass = 'bg-emerald-700';
     let icon = '<i class="fa-solid fa-check-circle"></i>';
 
     if (type === 'error') {
-        bgClass = 'bg-red-600';
+        bgClass = 'bg-rose-700';
         icon = '<i class="fa-solid fa-circle-exclamation"></i>';
     } else if (type === 'warning') {
-        bgClass = 'bg-yellow-500';
+        bgClass = 'bg-amber-600';
         icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
     }
 
-    toast.className = `toast flex items-center gap-3 px-4 py-3 rounded shadow-lg text-white ${bgClass} min-w-[300px]`;
+    toast.className = `toast flex items-center gap-3 px-4 py-3 rounded shadow-lg text-white ${bgClass} min-w-[300px] border border-amber-900/30`;
     toast.innerHTML = `
         <span class="text-lg">${icon}</span>
         <span class="font-medium">${message}</span>
