@@ -3,11 +3,13 @@ const path = require('path');
 const fs = require('fs');
 
 const DATA_FILE = path.join('data.json');
+let mainWindow = null;
 
 function createWindow() {
-    const win = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 1000,
         height: 800,
+        frame: false, // 隐藏窗口标题栏和边框
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true, // 必须开启以保障安全
@@ -15,8 +17,8 @@ function createWindow() {
         }
     });
 
-    win.loadFile('index.html');
-    win.setMenu(null);
+    mainWindow.loadFile('index.html');
+    mainWindow.setMenu(null);
 }
 
 app.whenReady().then(createWindow);
@@ -44,4 +46,27 @@ ipcMain.handle('save-data', async (event, data) => {
         console.error('保存文件失败:', error);
         return { success: false, error: error.message };
     }
+});
+
+// 窗口控制 API
+ipcMain.handle('window-minimize', () => {
+    if (mainWindow) mainWindow.minimize();
+});
+
+ipcMain.handle('window-maximize', () => {
+    if (mainWindow) {
+        if (mainWindow.isMaximized()) {
+            mainWindow.unmaximize();
+        } else {
+            mainWindow.maximize();
+        }
+    }
+});
+
+ipcMain.handle('window-close', () => {
+    if (mainWindow) mainWindow.close();
+});
+
+ipcMain.handle('window-is-maximized', () => {
+    return mainWindow ? mainWindow.isMaximized() : false;
 });

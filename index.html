@@ -22,6 +22,37 @@
             background-color: #f3f4f6;
         }
 
+        /* 自定义标题栏样式 */
+        .title-bar {
+            -webkit-app-region: drag;
+            user-select: none;
+        }
+
+        .title-bar-buttons {
+            -webkit-app-region: no-drag;
+        }
+
+        .window-btn {
+            width: 46px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .window-btn:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .window-btn.close:hover {
+            background-color: #e81123;
+            color: white;
+        }
+
         /* Hide scrollbar for Chrome, Safari and Opera */
         ::-webkit-scrollbar {
             display: none;
@@ -83,18 +114,24 @@
 </head>
 
 <body class="text-gray-800 min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <i class="fa-solid fa-chart-line text-blue-600 text-2xl"></i>
-                <h1 class="text-xl font-bold text-gray-900">个人财务报表软件</h1>
-            </div>
-            <div class="flex items-center gap-4" id="header-actions">
-                <!-- Dynamic content based on page -->
-            </div>
+    <!-- Custom Title Bar -->
+    <div class="title-bar bg-white shadow-sm flex items-center justify-between h-10 px-0">
+        <div class="flex items-center gap-2 px-4">
+            <i class="fa-solid fa-chart-line text-blue-600 text-lg"></i>
+            <span class="text-sm font-semibold text-gray-700">个人财务报表软件</span>
         </div>
-    </header>
+        <div class="title-bar-buttons flex items-center">
+            <button class="window-btn" id="btn-minimize" title="最小化">
+                <i class="fa-solid fa-minus text-gray-600 text-xs"></i>
+            </button>
+            <button class="window-btn" id="btn-maximize" title="最大化">
+                <i class="fa-regular fa-square text-gray-600 text-sm"></i>
+            </button>
+            <button class="window-btn close" id="btn-close" title="关闭">
+                <i class="fa-solid fa-xmark text-gray-600 text-base"></i>
+            </button>
+        </div>
+    </div>
     <!-- Main Content -->
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <!-- PAGE 1: Data Input -->
@@ -392,6 +429,33 @@
             els.btnDelete.addEventListener('click', deleteMonthData);
             els.btnViewHistory.addEventListener('click', showChartsPage);
             els.btnBack.addEventListener('click', showInputPage);
+
+            // 窗口控制按钮事件
+            document.getElementById('btn-minimize').addEventListener('click', async () => {
+                if (window.financeAPI && window.financeAPI.minimizeWindow) {
+                    await window.financeAPI.minimizeWindow();
+                }
+            });
+
+            document.getElementById('btn-maximize').addEventListener('click', async () => {
+                if (window.financeAPI && window.financeAPI.maximizeWindow) {
+                    await window.financeAPI.maximizeWindow();
+                    // 更新最大化图标
+                    const isMax = await window.financeAPI.isMaximized();
+                    const icon = document.querySelector('#btn-maximize i');
+                    if (isMax) {
+                        icon.className = 'fa-solid fa-down-left-and-up-right-to-center text-gray-600 text-sm';
+                    } else {
+                        icon.className = 'fa-regular fa-square text-gray-600 text-sm';
+                    }
+                }
+            });
+
+            document.getElementById('btn-close').addEventListener('click', async () => {
+                if (window.financeAPI && window.financeAPI.closeWindow) {
+                    await window.financeAPI.closeWindow();
+                }
+            });
 
             // Bind input events for auto-calculation
             const allInputs = document.querySelectorAll('input[type="number"]');
