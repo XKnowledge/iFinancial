@@ -10,6 +10,7 @@ function createWindow() {
         width: 1000,
         height: 800,
         frame: false, // 隐藏窗口标题栏和边框
+        icon: path.join(__dirname, 'iFinancial.ico'),
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true, // 必须开启以保障安全
