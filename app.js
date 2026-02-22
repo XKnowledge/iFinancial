@@ -408,6 +408,9 @@ async function deleteMonthData() {
 function showInputPage() {
     els.pageInput.classList.remove('hidden');
     els.pageCharts.classList.add('hidden');
+    // 显示输入页面控制栏，隐藏图表页面头部
+    document.querySelector('.sticky-controls').classList.remove('hidden');
+    document.getElementById('charts-header').classList.add('hidden');
     // Recalculate just in case
     calculate();
 }
@@ -415,6 +418,9 @@ function showInputPage() {
 function showChartsPage() {
     els.pageInput.classList.add('hidden');
     els.pageCharts.classList.remove('hidden');
+    // 隐藏输入页面控制栏，显示图表页面头部
+    document.querySelector('.sticky-controls').classList.add('hidden');
+    document.getElementById('charts-header').classList.remove('hidden');
     renderCharts();
 }
 

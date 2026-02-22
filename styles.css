@@ -51,6 +51,44 @@ body > * {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+}
+
+/* 固定控制栏 */
+.sticky-controls {
+    position: fixed;
+    top: 40px;
+    left: 0;
+    right: 0;
+    z-index: 99;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(45, 40, 35, 0.85) 0%, rgba(40, 35, 30, 0.9) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+/* 主内容区域顶部间距 */
+main {
+    padding-top: 140px !important;
+}
+
+/* 图表页面固定头部 */
+.sticky-charts-header {
+    position: fixed;
+    top: 40px;
+    left: 0;
+    right: 0;
+    z-index: 99;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(45, 40, 35, 0.85) 0%, rgba(40, 35, 30, 0.9) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
 }
 
 .title-bar-buttons {
