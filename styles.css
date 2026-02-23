@@ -345,6 +345,11 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 
+/* Toast Container - ensure it's above header */
+#toast-container {
+    z-index: 110 !important;
+}
+
 /* Toast Notification Animation */
 @keyframes slideIn {
     from {
