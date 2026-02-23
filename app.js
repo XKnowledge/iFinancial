@@ -1,5 +1,6 @@
 // --- Constants & State ---
 const STORAGE_KEY = 'finance_data_v1';
+const THEME_KEY = 'finance_theme';
 const DEFAULT_MONTH = '2026-02';
 
 // 全局数据缓存
@@ -48,8 +49,54 @@ let chartInstances = {
     bar: null
 };
 
+// --- Theme Management ---
+function initTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
+    setTheme(saved || 'dark');
+}
+
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem(THEME_KEY, theme);
+    const icon = document.querySelector('#btn-theme i');
+    if (icon) {
+        icon.className = theme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+    }
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    // Re-render charts if they're visible
+    if (!els.pageCharts.classList.contains('hidden')) {
+        renderCharts();
+    }
+}
+
+function getThemeColors() {
+    const style = getComputedStyle(document.documentElement);
+    return {
+        text: style.getPropertyValue('--chart-text').trim(),
+        tooltipBg: style.getPropertyValue('--chart-tooltip-bg').trim(),
+        tooltipBorder: style.getPropertyValue('--chart-tooltip-border').trim(),
+        tooltipText: style.getPropertyValue('--chart-tooltip-text').trim(),
+        axisLine: style.getPropertyValue('--chart-axis-line').trim(),
+        splitLine: style.getPropertyValue('--chart-split-line').trim(),
+        emerald: style.getPropertyValue('--chart-emerald').trim(),
+        red: style.getPropertyValue('--chart-red').trim(),
+        gold: style.getPropertyValue('--chart-gold').trim(),
+        goldAreaStart: style.getPropertyValue('--chart-gold-area-start').trim(),
+        goldAreaEnd: style.getPropertyValue('--chart-gold-area-end').trim()
+    };
+}
+
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize theme
+    initTheme();
+    document.getElementById('btn-theme').addEventListener('click', toggleTheme);
+
     // Set default month to current month
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -78,9 +125,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isMax = await window.financeAPI.isMaximized();
             const icon = document.querySelector('#btn-maximize i');
             if (isMax) {
-                icon.className = 'fa-solid fa-down-left-and-up-right-to-center text-amber-200/60 text-sm';
+                icon.className = 'fa-solid fa-down-left-and-up-right-to-center text-sm';
+                icon.style.color = 'var(--window-btn-icon)';
             } else {
-                icon.className = 'fa-regular fa-square text-amber-200/60 text-sm';
+                icon.className = 'fa-regular fa-square text-sm';
+                icon.style.color = 'var(--window-btn-icon)';
             }
         }
     });
@@ -442,6 +491,8 @@ function renderCharts() {
         return;
     }
 
+    const tc = getThemeColors();
+
     // Prepare Data Arrays
     const netIncomeData = [];
     const totalExpensesData = [];
@@ -471,17 +522,17 @@ function renderCharts() {
 
     const optionLine = {
         backgroundColor: 'transparent',
-        textStyle: { color: '#a0a0a0' },
+        textStyle: { color: tc.text },
         tooltip: {
             trigger: 'axis',
             axisPointer: { type: 'cross' },
-            backgroundColor: '#252525',
-            borderColor: '#d4af37',
-            textStyle: { color: '#f5f5f5' }
+            backgroundColor: tc.tooltipBg,
+            borderColor: tc.tooltipBorder,
+            textStyle: { color: tc.tooltipText }
         },
         legend: {
             data: ['净收入', '总支出', '净资产增幅'],
-            textStyle: { color: '#a0a0a0' }
+            textStyle: { color: tc.text }
         },
         grid: {
             left: '3%',
@@ -493,16 +544,16 @@ function renderCharts() {
             type: 'category',
             boundaryGap: false,
             data: months,
-            axisLine: { lineStyle: { color: '#3a3a3a' } },
-            axisLabel: { color: '#a0a0a0' }
+            axisLine: { lineStyle: { color: tc.axisLine } },
+            axisLabel: { color: tc.text }
         },
         yAxis: {
             type: 'value',
             name: '金额 (元)',
-            nameTextStyle: { color: '#a0a0a0' },
-            axisLabel: { formatter: '{value}', color: '#a0a0a0' },
-            splitLine: { lineStyle: { color: '#3a3a3a' } },
-            axisLine: { lineStyle: { color: '#3a3a3a' } }
+            nameTextStyle: { color: tc.text },
+            axisLabel: { formatter: '{value}', color: tc.text },
+            splitLine: { lineStyle: { color: tc.splitLine } },
+            axisLine: { lineStyle: { color: tc.axisLine } }
         },
         series: [
             {
@@ -510,21 +561,21 @@ function renderCharts() {
                 type: 'line',
                 data: netIncomeData,
                 smooth: true,
-                itemStyle: { color: '#34d399' } // emerald-400
+                itemStyle: { color: tc.emerald }
             },
             {
                 name: '总支出',
                 type: 'line',
                 data: totalExpensesData,
                 smooth: true,
-                itemStyle: { color: '#f87171' } // red-400
+                itemStyle: { color: tc.red }
             },
             {
                 name: '净资产增幅',
                 type: 'line',
                 data: netWorthGrowthData,
                 smooth: true,
-                itemStyle: { color: '#d4af37' } // gold
+                itemStyle: { color: tc.gold }
             }
         ]
     };
@@ -536,13 +587,13 @@ function renderCharts() {
 
     const optionBar = {
         backgroundColor: 'transparent',
-        textStyle: { color: '#a0a0a0' },
+        textStyle: { color: tc.text },
         tooltip: {
             trigger: 'axis',
             axisPointer: { type: 'cross' },
-            backgroundColor: '#252525',
-            borderColor: '#d4af37',
-            textStyle: { color: '#f5f5f5' }
+            backgroundColor: tc.tooltipBg,
+            borderColor: tc.tooltipBorder,
+            textStyle: { color: tc.tooltipText }
         },
         grid: {
             left: '3%',
@@ -554,16 +605,16 @@ function renderCharts() {
             type: 'category',
             boundaryGap: false,
             data: months,
-            axisLine: { lineStyle: { color: '#3a3a3a' } },
-            axisLabel: { color: '#a0a0a0' }
+            axisLine: { lineStyle: { color: tc.axisLine } },
+            axisLabel: { color: tc.text }
         },
         yAxis: {
             type: 'value',
             name: '净资产 (元)',
-            nameTextStyle: { color: '#a0a0a0' },
-            axisLabel: { color: '#a0a0a0' },
-            splitLine: { lineStyle: { color: '#3a3a3a' } },
-            axisLine: { lineStyle: { color: '#3a3a3a' } }
+            nameTextStyle: { color: tc.text },
+            axisLabel: { color: tc.text },
+            splitLine: { lineStyle: { color: tc.splitLine } },
+            axisLine: { lineStyle: { color: tc.axisLine } }
         },
         series: [
             {
@@ -571,11 +622,11 @@ function renderCharts() {
                 type: 'line',
                 data: netWorthData,
                 smooth: true,
-                itemStyle: { color: '#d4af37' },
+                itemStyle: { color: tc.gold },
                 areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: 'rgba(212, 175, 55, 0.4)' },
-                        { offset: 1, color: 'rgba(212, 175, 55, 0.05)' }
+                        { offset: 0, color: tc.goldAreaStart },
+                        { offset: 1, color: tc.goldAreaEnd }
                     ])
                 }
             }
