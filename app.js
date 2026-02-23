@@ -1,6 +1,5 @@
 // --- Constants & State ---
 const STORAGE_KEY = 'finance_data_v1';
-const THEME_KEY = 'finance_theme';
 const DEFAULT_MONTH = '2026-02';
 
 // 全局数据缓存
@@ -51,16 +50,15 @@ let chartInstances = {
 
 // --- Theme Management ---
 function initTheme() {
-    const saved = localStorage.getItem(THEME_KEY);
-    setTheme(saved || 'dark');
+    setTheme('dark');
 }
 
 function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem(THEME_KEY, theme);
-    const icon = document.querySelector('#btn-theme i');
+    const icon = document.querySelector('#btn-theme svg');
     if (icon) {
-        icon.className = theme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        icon.classList.remove('fa-moon', 'fa-sun');
+        icon.classList.add(theme === 'dark' ? 'fa-moon' : 'fa-sun');
     }
 }
 
@@ -123,12 +121,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             await window.financeAPI.maximizeWindow();
             // 更新最大化图标
             const isMax = await window.financeAPI.isMaximized();
-            const icon = document.querySelector('#btn-maximize i');
-            if (isMax) {
-                icon.className = 'fa-solid fa-down-left-and-up-right-to-center text-sm';
-                icon.style.color = 'var(--window-btn-icon)';
-            } else {
-                icon.className = 'fa-regular fa-square text-sm';
+            const icon = document.querySelector('#btn-maximize svg');
+            if (icon) {
+                if (isMax) {
+                    icon.classList.remove('fa-square');
+                    icon.classList.add('fa-down-left-and-up-right-to-center');
+                } else {
+                    icon.classList.remove('fa-down-left-and-up-right-to-center');
+                    icon.classList.add('fa-square');
+                }
                 icon.style.color = 'var(--window-btn-icon)';
             }
         }
@@ -166,12 +167,9 @@ async function loadAllData() {
         if (window.financeAPI && window.financeAPI.loadData) {
             allDataCache = await window.financeAPI.loadData();
         } else {
-            // 降级到 localStorage（开发环境或非 Electron 环境）
-            const stored = localStorage.getItem(STORAGE_KEY);
-            allDataCache = stored ? JSON.parse(stored) : {};
+            allDataCache = {};
         }
     } catch (error) {
-        console.error('加载数据失败:', error);
         allDataCache = {};
     }
 }
@@ -389,12 +387,9 @@ async function saveData() {
                 showToast(`保存失败: ${result.error}`, 'error');
             }
         } else {
-            // 降级到 localStorage（开发环境或非 Electron 环境）
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(allDataCache));
-            showToast(`${currentMonth} 数据已保存到 localStorage`, 'success');
+            showToast(`保存失败: ${error.message}`, 'error');
         }
     } catch (error) {
-        console.error('保存数据失败:', error);
         showToast(`保存失败: ${error.message}`, 'error');
     }
 }
@@ -438,16 +433,9 @@ async function deleteMonthData() {
                 showToast(`删除失败: ${result.error}`, 'error');
             }
         } else {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(allDataCache));
-            showToast(`${currentMonth} 数据已删除`, 'success');
-            els.inputs.assets.forEach(el => el.value = '');
-            els.inputs.liabilities.forEach(el => el.value = '');
-            els.inputs.incomes.forEach(el => el.value = '');
-            els.inputs.newInvestment.value = '';
-            calculate();
+            showToast(`删除失败: ${error.message}`, 'error');
         }
     } catch (error) {
-        console.error('删除数据失败:', error);
         showToast(`删除失败: ${error.message}`, 'error');
     }
 }
