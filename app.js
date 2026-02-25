@@ -50,6 +50,9 @@ let chartInstances = {
     bar: null
 };
 
+// Flag to ensure resize event is only bound once
+let resizeEventBound = false;
+
 // --- Theme Management ---
 function initTheme() {
     setTheme('dark');
@@ -175,11 +178,95 @@ async function loadAllData() {
     try {
         if (window.financeAPI && window.financeAPI.loadData) {
             allDataCache = await window.financeAPI.loadData();
+            // 重新计算所有月份的数据并保存
+            await recalculateAllMonths();
         } else {
             allDataCache = {};
         }
     } catch (error) {
         allDataCache = {};
+    }
+}
+
+// 辅助函数：保留2位小数
+function round2(val) {
+    return Math.round(val * 100) / 100;
+}
+
+// 重新计算所有月份的数据
+async function recalculateAllMonths() {
+    const months = Object.keys(allDataCache).sort();
+    if (months.length === 0) return;
+
+    for (const month of months) {
+        const data = allDataCache[month];
+
+        // 计算资产负债表
+        const totalAssets = round2(parseNum(data.cash) + parseNum(data.bankDeposit) + parseNum(data.equity) + parseNum(data.realEstate));
+        const totalLiabilities = round2(parseNum(data.creditCard) + parseNum(data.bankLoan));
+        const netWorth = round2(totalAssets - totalLiabilities);
+
+        // 获取上月数据
+        const prevMonth = getPrevMonth(month);
+        const prevData = allDataCache[prevMonth];
+
+        // 计算投资收入
+        let investmentIncome = null;
+        if (prevData && prevData.equity !== undefined) {
+            const prevEquity = parseNum(prevData.equity);
+            const newInvestment = parseNum(data.newInvestment);
+            const equity = parseNum(data.equity);
+            investmentIncome = round2(equity - prevEquity - newInvestment);
+        }
+
+        // 计算总收入
+        const salary = parseNum(data.salary);
+        const otherIncome = parseNum(data.otherIncome);
+        let totalIncome = round2(salary + otherIncome);
+        if (investmentIncome !== null) {
+            totalIncome = round2(totalIncome + investmentIncome);
+        }
+
+        // 计算生活支出
+        let totalExpenses = null;
+        if (prevData && prevData.netWorth !== undefined && investmentIncome !== null) {
+            const prevNetWorth = parseNum(prevData.netWorth);
+            totalExpenses = round2(prevNetWorth + totalIncome - netWorth);
+        }
+
+        // 计算净收入
+        let netIncome = null;
+        if (totalExpenses !== null) {
+            netIncome = round2(totalIncome - totalExpenses);
+        }
+
+        // 计算 ROE
+        let roe = null;
+        if (netWorth !== 0) {
+            roe = round2((salary * 12) / netWorth);
+        }
+
+        // 更新数据
+        allDataCache[month] = {
+            ...data,
+            totalAssets,
+            totalLiabilities,
+            netWorth,
+            investmentIncome,
+            totalIncome,
+            totalExpenses,
+            netIncome,
+            roe
+        };
+    }
+
+    // 保存更新后的数据
+    try {
+        if (window.financeAPI && window.financeAPI.saveData) {
+            await window.financeAPI.saveData(allDataCache);
+        }
+    } catch (error) {
+        console.error('重新计算后保存失败:', error);
     }
 }
 
@@ -215,33 +302,59 @@ function loadMonthData(month) {
     // 更新当前加载的月份
     lastLoadedMonth = month;
 
-    // Reset inputs
-    els.inputs.assets.forEach(el => el.value = '');
-    els.inputs.liabilities.forEach(el => el.value = '');
-    els.inputs.incomes.forEach(el => el.value = '');
-    els.inputs.newInvestment.value = '';
+    // Helper: 如果值为 undefined 或 null，返回 0，否则返回原值
+    const defaultZero = (val) => (val !== undefined && val !== null && val !== '') ? val : 0;
 
     // Map specific fields based on order or IDs if needed
     // Order defined in HTML: Cash, Bank, Equity, RealEstate
     const assetInputs = Array.from(els.inputs.assets);
-    if (monthData.cash !== undefined) assetInputs[0].value = monthData.cash;
-    if (monthData.bankDeposit !== undefined) assetInputs[1].value = monthData.bankDeposit;
-    if (monthData.equity !== undefined) assetInputs[2].value = monthData.equity;
-    if (monthData.realEstate !== undefined) assetInputs[3].value = monthData.realEstate;
+    assetInputs[0].value = defaultZero(monthData.cash);
+    assetInputs[1].value = defaultZero(monthData.bankDeposit);
+    assetInputs[2].value = defaultZero(monthData.equity);
+    assetInputs[3].value = defaultZero(monthData.realEstate);
 
     // Order: CreditCard, BankLoan
     const liabilityInputs = Array.from(els.inputs.liabilities);
-    if (monthData.creditCard !== undefined) liabilityInputs[0].value = monthData.creditCard;
-    if (monthData.bankLoan !== undefined) liabilityInputs[1].value = monthData.bankLoan;
+    liabilityInputs[0].value = defaultZero(monthData.creditCard);
+    liabilityInputs[1].value = defaultZero(monthData.bankLoan);
 
     // Order: Salary, OtherIncome
     const incomeInputs = Array.from(els.inputs.incomes);
-    if (monthData.salary !== undefined) incomeInputs[0].value = monthData.salary;
-    if (monthData.otherIncome !== undefined) incomeInputs[1].value = monthData.otherIncome;
+    incomeInputs[0].value = defaultZero(monthData.salary);
+    incomeInputs[1].value = defaultZero(monthData.otherIncome);
 
-    if (monthData.newInvestment !== undefined) els.inputs.newInvestment.value = monthData.newInvestment;
+    els.inputs.newInvestment.value = defaultZero(monthData.newInvestment);
 
+    // 执行计算获取基础值
     calculate();
+
+    // 如果有保存的计算值且不是 null，则使用保存的值覆盖显示
+    // 这样即使上月数据缺失，也能显示已保存的计算结果
+    if (monthData.totalAssets !== undefined && monthData.totalAssets !== null) {
+        els.outputs.totalAssets.textContent = formatNum(monthData.totalAssets);
+    }
+    if (monthData.totalLiabilities !== undefined && monthData.totalLiabilities !== null) {
+        els.outputs.totalLiabilities.textContent = formatNum(monthData.totalLiabilities);
+    }
+    if (monthData.netWorth !== undefined && monthData.netWorth !== null) {
+        els.outputs.netWorth.textContent = formatNum(monthData.netWorth);
+    }
+    if (monthData.investmentIncome !== undefined && monthData.investmentIncome !== null) {
+        els.outputs.investmentIncome.textContent = formatNum(monthData.investmentIncome);
+        els.outputs.invIncomeCheck.textContent = formatNum(monthData.investmentIncome);
+    }
+    if (monthData.totalIncome !== undefined && monthData.totalIncome !== null) {
+        els.outputs.totalIncome.textContent = formatNum(monthData.totalIncome);
+    }
+    if (monthData.totalExpenses !== undefined && monthData.totalExpenses !== null) {
+        els.outputs.totalExpenses.textContent = formatNum(monthData.totalExpenses);
+    }
+    if (monthData.netIncome !== undefined && monthData.netIncome !== null) {
+        els.outputs.netIncome.textContent = formatNum(monthData.netIncome);
+    }
+    if (monthData.roe !== undefined && monthData.roe !== null) {
+        els.outputs.roe.textContent = (monthData.roe * 100).toFixed(2) + '%';
+    }
 }
 
 // Handle Month Selector Change
@@ -349,9 +462,9 @@ function calculate() {
     const newInvestment = parseNum(els.inputs.newInvestment.value);
 
     // 2. Basic Calculations
-    const totalAssets = cash + bankDeposit + equity + realEstate;
-    const totalLiabilities = creditCard + bankLoan;
-    const netWorth = totalAssets - totalLiabilities;
+    const totalAssets = round2(cash + bankDeposit + equity + realEstate);
+    const totalLiabilities = round2(creditCard + bankLoan);
+    const netWorth = round2(totalAssets - totalLiabilities);
 
     // Update UI for basic calcs
     els.outputs.totalAssets.textContent = formatNum(totalAssets);
@@ -372,7 +485,7 @@ function calculate() {
     // Investment Income = CurrEquity - PrevEquity - NewInvestment
     if (prevData && prevData.equity !== undefined) {
         const prevEquity = parseNum(prevData.equity);
-        const calcInvIncome = equity - prevEquity - newInvestment;
+        const calcInvIncome = round2(equity - prevEquity - newInvestment);
         investmentIncome = calcInvIncome; // Keep as number for further calc
         els.outputs.investmentIncome.textContent = formatNum(calcInvIncome);
         els.outputs.invIncomeCheck.textContent = formatNum(calcInvIncome);
@@ -382,16 +495,16 @@ function calculate() {
     }
 
     // Total Income = Salary + OtherIncome + InvestmentIncome
-    let totalIncome = salary + otherIncome;
+    let totalIncome = round2(salary + otherIncome);
     if (typeof investmentIncome === 'number') {
-        totalIncome += investmentIncome;
+        totalIncome = round2(totalIncome + investmentIncome);
     }
     els.outputs.totalIncome.textContent = formatNum(totalIncome);
 
     // Total Expenses = PrevNetWorth + CurrTotalIncome - CurrNetWorth
     if (prevData && prevData.netWorth !== undefined && typeof investmentIncome === 'number') {
         const prevNetWorth = parseNum(prevData.netWorth);
-        const calcExpenses = prevNetWorth + totalIncome - netWorth;
+        const calcExpenses = round2(prevNetWorth + totalIncome - netWorth);
         totalExpenses = calcExpenses;
         els.outputs.totalExpenses.textContent = formatNum(calcExpenses);
     } else {
@@ -400,7 +513,7 @@ function calculate() {
 
     // Net Income = TotalIncome - TotalExpenses
     if (typeof totalExpenses === 'number') {
-        netIncome = totalIncome - totalExpenses;
+        netIncome = round2(totalIncome - totalExpenses);
         els.outputs.netIncome.textContent = formatNum(netIncome);
     } else {
         els.outputs.netIncome.textContent = 'NA';
@@ -408,7 +521,7 @@ function calculate() {
 
     // ROE = (Salary * 12) / NetWorth (display as percentage)
     if (netWorth !== 0) {
-        const calcRoe = (salary * 12) / netWorth;
+        const calcRoe = round2((salary * 12) / netWorth);
         roe = calcRoe;
         els.outputs.roe.textContent = (calcRoe * 100).toFixed(2) + '%';
     } else {
@@ -575,26 +688,21 @@ function renderCharts() {
     const tc = getThemeColors();
 
     // Prepare Data Arrays
-    const netIncomeData = [];
-    const totalExpensesData = [];
-    const netWorthGrowthData = [];
+    const totalExpensesData = []; // 生活支出
+    const totalIncomeData = [];   // 总收入
+    const investmentIncomeData = []; // 投资收入
     const netWorthData = [];
 
     months.forEach(m => {
         const d = allDataCache[m];
-        // Use null for missing data to break the line in ECharts (shows gap instead of misleading 0)
-        netIncomeData.push(d.netIncome !== null ? d.netIncome : null);
+        // 生活支出
         totalExpensesData.push(d.totalExpenses !== null ? d.totalExpenses : null);
-        netWorthData.push(d.netWorth);
-
-        // Calculate Growth (absolute value)
-        const prevMonth = getPrevMonth(m);
-        let growth = null;
-        if (allDataCache[prevMonth]) {
-            const prevNW = allDataCache[prevMonth].netWorth;
-            growth = d.netWorth - prevNW;
-        }
-        netWorthGrowthData.push(growth);
+        // 总收入
+        totalIncomeData.push(d.totalIncome !== null && d.totalIncome !== undefined ? d.totalIncome : null);
+        // 投资收入
+        investmentIncomeData.push(d.investmentIncome !== null ? d.investmentIncome : null);
+        // 净资产
+        netWorthData.push(d.netWorth !== null && d.netWorth !== undefined ? d.netWorth : null);
     });
 
     // Init Chart 1: Line
@@ -612,7 +720,7 @@ function renderCharts() {
             textStyle: { color: tc.tooltipText }
         },
         legend: {
-            data: ['净收入', '总支出', '净资产增幅'],
+            data: ['生活支出', '总收入', '投资收入'],
             textStyle: { color: tc.text }
         },
         grid: {
@@ -638,23 +746,23 @@ function renderCharts() {
         },
         series: [
             {
-                name: '净收入',
-                type: 'line',
-                data: netIncomeData,
-                smooth: true,
-                itemStyle: { color: tc.emerald }
-            },
-            {
-                name: '总支出',
+                name: '生活支出',
                 type: 'line',
                 data: totalExpensesData,
                 smooth: true,
                 itemStyle: { color: tc.red }
             },
             {
-                name: '净资产增幅',
+                name: '总收入',
                 type: 'line',
-                data: netWorthGrowthData,
+                data: totalIncomeData,
+                smooth: true,
+                itemStyle: { color: tc.emerald }
+            },
+            {
+                name: '投资收入',
+                type: 'line',
+                data: investmentIncomeData,
                 smooth: true,
                 itemStyle: { color: tc.gold }
             }
@@ -715,11 +823,14 @@ function renderCharts() {
     };
     chartInstances.bar.setOption(optionBar);
 
-    // Resize handling
-    window.addEventListener('resize', () => {
-        chartInstances.line && chartInstances.line.resize();
-        chartInstances.bar && chartInstances.bar.resize();
-    });
+    // Resize handling - only bind once
+    if (!resizeEventBound) {
+        window.addEventListener('resize', () => {
+            chartInstances.line && chartInstances.line.resize();
+            chartInstances.bar && chartInstances.bar.resize();
+        });
+        resizeEventBound = true;
+    }
 }
 
 // --- Utilities ---
