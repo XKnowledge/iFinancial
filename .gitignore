@@ -10,7 +10,6 @@ release
 node_modules
 __pycache__
 
-*lock*
 yarn.lock
 
 data.json
