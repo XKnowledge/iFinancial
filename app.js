@@ -4,6 +4,8 @@ const DEFAULT_MONTH = '2026-02';
 
 // 全局数据缓存
 let allDataCache = {};
+// 记录当前加载的月份，用于切换时保存
+let lastLoadedMonth = null;
 
 // DOM Elements
 const els = {
@@ -155,6 +157,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // 窗口关闭前自动保存
+    window.addEventListener('beforeunload', async () => {
+        if (lastLoadedMonth && checkHasAnyInput()) {
+            await saveDataSilent(lastLoadedMonth);
+        }
+    });
+
     // 从 JSON 文件加载数据
     await loadAllData();
     // Initial Load
@@ -203,6 +212,8 @@ function formatNum(val) {
 // Load data for a specific month
 function loadMonthData(month) {
     const monthData = allDataCache[month] || {};
+    // 更新当前加载的月份
+    lastLoadedMonth = month;
 
     // Reset inputs
     els.inputs.assets.forEach(el => el.value = '');
@@ -234,10 +245,92 @@ function loadMonthData(month) {
 }
 
 // Handle Month Selector Change
-function handleMonthChange(e) {
+async function handleMonthChange(e) {
     const newMonth = e.target.value;
-    if (newMonth) {
-        loadMonthData(newMonth);
+    if (!newMonth) return;
+
+    // 如果新月份与当前加载的月份相同，不需要操作
+    if (newMonth === lastLoadedMonth) {
+        return;
+    }
+
+    // 保存当前正在编辑的月份的数据（在切换之前）
+    if (lastLoadedMonth) {
+        await autoSaveCurrentMonth(lastLoadedMonth);
+    }
+
+    // 加载新月份的数据
+    loadMonthData(newMonth);
+}
+
+// 切换月份前自动保存当前月份的数据
+async function autoSaveCurrentMonth(month) {
+    // 检查是否有任何输入值
+    const hasAnyInput = checkHasAnyInput();
+
+    if (!hasAnyInput) {
+        return; // 没有输入内容，跳过保存
+    }
+
+    // 保存数据（静默保存，不显示提示）
+    await saveDataSilent(month);
+}
+
+// 检查是否有任何输入值
+function checkHasAnyInput() {
+    const allInputs = document.querySelectorAll('input[type="number"]');
+    for (const input of allInputs) {
+        if (input.value && input.value.trim() !== '') {
+            return true;
+        }
+    }
+    return false;
+}
+
+// 静默保存数据（不显示 toast）
+async function saveDataSilent(month) {
+    // Gather inputs
+    const assetInputs = Array.from(els.inputs.assets).map(el => parseNum(el.value));
+    const liabilityInputs = Array.from(els.inputs.liabilities).map(el => parseNum(el.value));
+    const incomeInputs = Array.from(els.inputs.incomes).map(el => parseNum(el.value));
+    const newInvestment = parseNum(els.inputs.newInvestment.value);
+
+    // Get calculated values directly from calculate function
+    const calcResults = calculate();
+
+    const dataToSave = {
+        cash: assetInputs[0],
+        bankDeposit: assetInputs[1],
+        equity: assetInputs[2],
+        realEstate: assetInputs[3],
+        creditCard: liabilityInputs[0],
+        bankLoan: liabilityInputs[1],
+        salary: incomeInputs[0],
+        otherIncome: incomeInputs[1],
+        newInvestment: newInvestment,
+        // Store calculated results directly from calculation
+        totalAssets: calcResults.totalAssets,
+        totalLiabilities: calcResults.totalLiabilities,
+        netWorth: calcResults.netWorth,
+        investmentIncome: calcResults.investmentIncome,
+        totalIncome: calcResults.totalIncome,
+        totalExpenses: calcResults.totalExpenses,
+        netIncome: calcResults.netIncome,
+        roe: calcResults.roe,
+        updatedAt: new Date().toISOString()
+    };
+
+    // 更新缓存
+    allDataCache[month] = dataToSave;
+
+    // 保存到 JSON 文件
+    try {
+        if (window.financeAPI && window.financeAPI.saveData) {
+            await window.financeAPI.saveData(allDataCache);
+        }
+    } catch (error) {
+        // 静默失败，不显示错误提示
+        console.error('自动保存失败:', error);
     }
 }
 
