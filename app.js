@@ -658,12 +658,18 @@ function showInputPage() {
     calculate();
 }
 
-function showChartsPage() {
+async function showChartsPage() {
+    // 先保存当前正在编辑的月份数据到缓存
+    if (lastLoadedMonth && checkHasAnyInput()) {
+        await saveDataSilent(lastLoadedMonth);
+    }
     els.pageInput.classList.add('hidden');
     els.pageCharts.classList.remove('hidden');
     // 隐藏输入页面控制栏，显示图表页面头部
     document.querySelector('.sticky-controls').classList.add('hidden');
     document.getElementById('charts-header').classList.remove('hidden');
+    // 在显示图表之前重新计算数据
+    await recalculateAllMonths();
     renderCharts();
 }
 
