@@ -33,13 +33,11 @@ jobs:
             ${{ runner.os }}-electron-
 
       - name: 安装依赖
-        run: |
-          npm config set registry https://registry.npmmirror.com
-          npm config set electron_mirror https://npmmirror.com/mirrors/electron/
-          npm config set electron_builder_binaries_mirror https://npmmirror.com/mirrors/electron-builder-binaries/
-          npm install --registry=https://registry.npmmirror.com
+        run: npm install --registry=https://registry.npmmirror.com
         env:
           ELECTRON_BUILDER_CACHE: ${{ github.workspace }}\.cache\electron-builder
+          electron_mirror: https://npmmirror.com/mirrors/electron/
+          electron_builder_binaries_mirror: https://npmmirror.com/mirrors/electron-builder-binaries/
 
       - name: 构建项目
         run: npm run build:win
