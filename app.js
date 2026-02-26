@@ -178,6 +178,8 @@ async function loadAllData() {
     try {
         if (window.financeAPI && window.financeAPI.loadData) {
             allDataCache = await window.financeAPI.loadData();
+            // 按时间顺序排序数据
+            allDataCache = sortDataByMonth(allDataCache);
             // 重新计算所有月份的数据并保存
             await recalculateAllMonths();
         } else {
@@ -263,7 +265,8 @@ async function recalculateAllMonths() {
     // 保存更新后的数据
     try {
         if (window.financeAPI && window.financeAPI.saveData) {
-            await window.financeAPI.saveData(allDataCache);
+            const sortedCache = sortDataByMonth(allDataCache);
+            await window.financeAPI.saveData(sortedCache);
         }
     } catch (error) {
         console.error('重新计算后保存失败:', error);
@@ -436,15 +439,28 @@ async function saveDataSilent(month) {
     // 更新缓存
     allDataCache[month] = dataToSave;
 
+    // 按时间顺序排序数据
+    const sortedCache = sortDataByMonth(allDataCache);
+
     // 保存到 JSON 文件
     try {
         if (window.financeAPI && window.financeAPI.saveData) {
-            await window.financeAPI.saveData(allDataCache);
+            await window.financeAPI.saveData(sortedCache);
         }
     } catch (error) {
         // 静默失败，不显示错误提示
         console.error('自动保存失败:', error);
     }
+}
+
+// 按月份时间顺序排序数据
+function sortDataByMonth(data) {
+    const sortedKeys = Object.keys(data).sort();
+    const sortedData = {};
+    for (const key of sortedKeys) {
+        sortedData[key] = data[key];
+    }
+    return sortedData;
 }
 
 // Calculation Engine
@@ -583,10 +599,13 @@ async function saveData() {
     // 更新缓存
     allDataCache[currentMonth] = dataToSave;
 
+    // 按时间顺序排序数据
+    const sortedCache = sortDataByMonth(allDataCache);
+
     // 保存到 JSON 文件
     try {
         if (window.financeAPI && window.financeAPI.saveData) {
-            const result = await window.financeAPI.saveData(allDataCache);
+            const result = await window.financeAPI.saveData(sortedCache);
             if (result.success) {
                 showToast(`${currentMonth} 数据已保存到文件`, 'success');
             } else {
@@ -623,10 +642,13 @@ async function deleteMonthData() {
     // Delete the month data from cache
     delete allDataCache[currentMonth];
 
+    // 按时间顺序排序数据
+    const sortedCache = sortDataByMonth(allDataCache);
+
     // Save to JSON file
     try {
         if (window.financeAPI && window.financeAPI.saveData) {
-            const result = await window.financeAPI.saveData(allDataCache);
+            const result = await window.financeAPI.saveData(sortedCache);
             if (result.success) {
                 showToast(`${currentMonth} 数据已删除`, 'success');
                 // Clear input fields
